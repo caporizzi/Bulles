@@ -6,20 +6,63 @@ We want to accurately identify, count and characterize bubbles for understanding
 
 ## Conception
 
+The conception of the algorithm was done in three phases:
+1- Understanding & drawing both given algorithm
+2- Reusing concept from previous courses 
+3- Planning, coding
+
+### Understanding and Drawing
+
 To conceive the algorithm, the main source was "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" [1] where both the sequential and the parallel solution were given.
 Here, Figure 1 shows the sequential algorithm. The main idea is that it does a breath first search. Each time we find a node we look for the direct neighbor mark them then execute this on the neighbor. Once we can't find direct neighbors all the marked node are of the same id and we continue to iterate through the grid. 
+
 ![Figure 1 - Basic serial single block identification algorithm](https://i.imgur.com/dALZYxE.png) 
+
+Here is a visual representation of the sequential algorithm labeling a node and their neighbor forming a block with the same label.
+
+![enter image description here](https://i.imgur.com/VcUjxCI.png)
+
 Here, Figure 2 shows the parallel algorithm. 
 Here the main idea is that the grid is divided in blocks. Each block is explored giving indexes to each node. Once all nodes are tagged we compare if node of different block are neighbors and update the node id.
+
 ![Figure 2 - Parallel, multi-block tag synchronization algorithm](https://i.imgur.com/8W6BvQj.png)
 
-The conception was done in three phases:
-1- Understanding & drawing both algorithm
-2- Reusing concept from previous courses 
-3- Planning, coding, testing and verifying
+Here is a visual representation of the parallel algorithm. It checks if neighboring cell of different block exist and update the label.
+![enter image description here](https://i.imgur.com/K34D2fm.png)
 
 
 
+## Verification
+Here, my code pass through several test cases to prove it works as intended 
+
+### Testcase 1
+From the Testcase 1, launched with 3 process, we expect the result to have 2 labels max.
+
+The grid is initiated, divided in 3, ranging from rank 0 to rank 2. 
+Each rank scan locally each value from left-to-right, top to bottom. 
+If one local neighbor labeled, it copy that label.
+If both neighbors are labeled, it copy the one on the left.
+
+![enter image description here](https://i.imgur.com/Pg3di1r.png)
+
+Then, each rank register their max label and we proceed to an offset.
+
+Then each rank sends their bottom row to their rank+1, and receive the top rank from their rank-1.
+§![enter image description here](https://i.imgur.com/e56o9LU.png)
+![enter image description here](https://i.imgur.com/Qv9iexN.png)
+
+Here comes the pair gathering. 
+We get interrank pairs and intrarank pairs.
+
+![enter image description here](https://i.imgur.com/e56o9LU.png)
+
+Here comes the pair equivalence.
+From the previous step, we know that all my 4 are 2. 
+Also know that all my 3 are 4. This means that all my 3 which are 4, are in reality 2.
+Then we know that all my 5 are 3, this means that all my 5 which are 3 are in reality 4 which are in reality 2.
+So we get the global and final grid, resulting as 2 maximal global label as expected.
+
+![enter image description here](https://i.imgur.com/8yiseSZ.png)
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
 
