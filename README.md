@@ -32,6 +32,10 @@ Here is a visual representation of the parallel algorithm. It checks if neighbor
 
 
 
+## Implementation
+
+
+
 ## Verification
 Here, my code pass through several test cases to prove it works as intended 
 
@@ -48,7 +52,7 @@ If both neighbors are labeled, it copy the one on the left.
 Then, each rank register their max label and we proceed to an offset.
 
 Then each rank sends their bottom row to their rank+1, and receive the top rank from their rank-1.
-§![enter image description here](https://i.imgur.com/e56o9LU.png)
+
 ![enter image description here](https://i.imgur.com/Qv9iexN.png)
 
 Here comes the pair gathering. 
@@ -63,6 +67,33 @@ Then we know that all my 5 are 3, this means that all my 5 which are 3 are in re
 So we get the global and final grid, resulting as 2 maximal global label as expected.
 
 ![enter image description here](https://i.imgur.com/8yiseSZ.png)
+
+### Testcase 2
+
+Same grid as Testcase 1, but with only 2 process, we expect the same result.
+
+We get "First few gathered equivalence pairs: (3,4) (3,4) (2,4) (2,4)" 
+The offset and the pair are what is intended after the global merge, we reach the expected result.
+
+### Testcase 3
+
+Here I ask a LLM to give me some testcase.
+
+It outputs a test case which ressembles a snake, testing if the corner, rank comuncation and gathering works as intended.
+It outputs a test case which looks like little boxe.
+Both outputs were as intended.
+
+![enter image description here](https://i.imgur.com/48Ds8fV.png) 
+
+ ## Analysis
+
+Here, the output is treated by a python program which aims to count the number of bubble inside my domain and also to see how big gaz are in my domain.
+
+Here is an example for one iteration. My visit display this, I added the label.
+![enter image description here](https://i.imgur.com/z9mMI1O.png)
+
+Here, I choose to view it as a percentage of gasses versus liquidity.
+![enter image description here](https://i.imgur.com/bIF9Zr1.png)
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
 
