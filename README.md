@@ -2,14 +2,12 @@
 
 ## Goals 
 
-We want to accurately identify, count and characterize bubbles for understanding gas-liquid mixing. We track bubble's evolution over time and extract characteristic such as size. We develop algorithms for bubble detection and leverage parallel computing techniques. 
+The objective is to accurately detect, count, and characterize gas bubbles in multiphase flow simulations in order to improve the understanding of gas–liquid mixing phenomena. 
+The algorithm is designed to identify and label bubbles, track their temporal evolution, and extract quantitative characteristics such as size. 
+At the same time, the implementation must remain efficient and scalable, which is why we rely on distributed-memory parallelism with MPI to handle large-scale datasets on high-performance computing platforms. 
+By combining robust detection methods with parallel computing techniques, the goal is to obtain a solution that is both computationally efficient and suitable for analyzing realistic two dimensional simulations.
 
 ## Conception
-
-The conception of the algorithm was done in three phases:
-1- Understanding & drawing both given algorithm
-2- Reusing concept from previous courses 
-3- Planning, coding
 
 ### Understanding and Drawing
 
@@ -34,14 +32,19 @@ Here is a visual representation of the parallel algorithm. It checks if neighbor
 
 ## Implementation
 
-Here I discuss my algorithm choice
-
 ### Why this algorithm
 
 The goal is to create something parallel friendly and simple based on the time given. 
-The first choice is to implement a connected component labelling to create label. As given in the algorithm.
+Bubble identification can be formulated as a connected component labeling (CCL) problem on a binary grid. CCL is a natural choice because it provides a clear mapping from individual cells to bubble IDs and can be parallelized efficiently.
+
+#### Equivalence 
 Then, based on Discrete Math, Math based functions are always fast so went with Union based algorithm which will solve the equivalence part. 
-Plus, I followed the choice of the studied algorithm and stayed in a 4-connectivity to avoid diagonals connectivity.
+Union-Find has nearly constant-time operations with path compression and union by rank, making it highly efficient for merging label sets both locally (intra-rank) and across process boundaries (inter-rank). This is more scalable and robust than recursive DFS/BFS approaches, which may require deep recursion or redundant traversals.
+
+#### Connectivity
+Connectivity was restricted to 4-neighbors (up, down, left, right) instead of 8-neighbors. This choice avoids diagonal merging of bubbles, which can artificially connect distinct structures and bias size distribution. Moreover, 4-connectivity reduces ambiguity and simplifies communication at process boundaries, making it more aligned with physical interpretations in gas–liquid multiphase flows.
+
+
 
 ### About data parallelism
 
@@ -50,30 +53,26 @@ Each MPI rank gets rows. In this case it means that we only care about the commu
 
 ### Step-by-step code implementation
 
-Rank 0 starts by reading the whole file. This ensure a consistent copy.
-Then we broadcast the dimension to all the rank through MPI_Bcast.
-Then we decide which rank gets which row through buidl, count and rows.
-Then we send the rows to the rank through MPI_Scatterv.
-Now each rank has its own rows to work on and we can avoid conflicts.
-Now we apply a threshold to all the value, ensuring we only end up with 0 and 1 value.
 
-At this point, we can leverage the parallelisation.
-Each rank will execute on it's own rows.
-It perform a connected component labeling (CCL), this means provisional labels will be given. We prepare the max label per rank. 
-Now we perform the offset: each rank gets a base offset, then adds it to its labels.
-After the offset, no different rank will have the same label ID.
-Now we need to find the cross rank equivalence. 
-Through MPI sendrecv, each rank will send its bottom row, and each rank will receive the top row from rank-1.
-We record the equivalence. This give the interrank equivalence.
-We also perform a local Union-Find. This give the intrarank equivalence.
-We then gather all the equivalence pair to rank 0 through MPI_Gatherv.
-Now we create a globalMap which will be used for the global merge.
-Now we broadcast the new mapping and we remap.
-Gather full labeled image through MPI_Gatherv and write the output.
+Rank 0 begins by reading the entire input file to ensure a single, consistent copy of the image. After that, the image dimensions are broadcast to all ranks using `MPI_Bcast`, so every rank knows the size of the data.
+
+Next, we determine how many rows each rank will process using `build_counts_displs`, which calculates the number of rows per rank, the total number of elements per rank, and the starting offsets for each rank. The rows are then distributed to each rank using `MPI_Scatterv`, giving each rank its own portion of the image to work on independently, which avoids conflicts.
+
+Once each rank has its local rows, a threshold is applied to convert the image into a binary mask with values 0 and 1, identifying background and foreground pixels.
+
+At this stage, parallel processing begins. Each rank performs Connected Component Labeling (CCL) on its local sub-image. This assigns provisional labels to connected foreground pixels. The maximum label used by each rank is recorded.
+
+To ensure globally unique labels, an offset is computed for each rank using `MPI_Exscan`. Each rank adds its offset to its local labels, so no two ranks share the same label ID.
+
+Next, cross-rank equivalences are identified. Each rank sends its bottom row to the next rank and receives the top row from the previous rank using `MPI_Sendrecv`. Any labels that match across these rows are recorded as equivalences. In addition, a local Union-Find structure resolves intrarank equivalences between provisional labels.
+
+All equivalence pairs (inter- and intra-rank) are gathered on rank 0 using `MPI_Gatherv`. Rank 0 then builds a global mapping (`globalMap`) that assigns compact, consecutive labels for all connected components across ranks.
+
+This global mapping is broadcast to all ranks, which then remap their local labels accordingly. Finally, the fully labeled image is gathered on rank 0 using `MPI_Gatherv` and written to the output file.
 
 
 ## Verification
-Here, my code pass through several test cases to prove it works as intended 
+Here, my code pass through several test cases to prove it works as intended. 
 
 ### Testcase 1
 From the Testcase 1, launched with 3 process, we expect the result to have 2 labels max.
@@ -123,18 +122,28 @@ Both outputs were as intended.
 
  ## Analysis
 
-Here, the output is treated by a python program which aims to count the number of bubble inside my domain and also to see how big gaz are in my domain.
+This output is processed by a Python program designed to count the number of bubbles in my domain and to measure the size of the gas regions.
 
-Here is an example for one iteration. My visit display this, I added the label.
+Here is an example for the initial iteration. My visit display this, I added the label.
 ![enter image description here](https://i.imgur.com/z9mMI1O.png)
 
 Here, I choose to view it as a percentage of gasses versus liquidity.
 ![enter image description here](https://i.imgur.com/bIF9Zr1.png)
+
+Here, one of the last iteration in my simulation.
+
+As expected most of the bubble have risen to the surface.
+![enter image description here](https://i.imgur.com/DSmegJD.png)
+
+![enter image description here](https://i.imgur.com/e6Nv6nR.png)
+
+The domain is mostly liquid, with ~70% of cells as liquid and ~30% representing gas regions. 
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
 
 ## Figures
 Figure 1 - Basic serial single block identification algorithm
+
 Figure 2 - Parallel, multi-block tag synchronization algorithm
 
 
