@@ -143,6 +143,8 @@ As expected most of the bubble have risen to the surface.
 
 The domain is mostly liquid, with ~70% of cells as liquid and ~30% representing gas regions. 
 
+Each rank only stores its local portion, rank 0 stores global data, overall memory usage scales with grid size and number of temporary labels.
+
 The main bottleneck will likely come from the global equivalence resolution step. This stage currently relies on gathering equivalence pairs on rank 0, which introduces a synchronization point and limits parallel efficiency as the number of processes increases. 	
 
 Since all the execution was done locally, performance metrics such as runtime scaling or memory consumption were excluded from the analysis. The main focus was on verifying correctness and ensuring that the algorithm works in a distributed-memory setting. However, the algorithm was designed with scalability in mind, and the next step is to run it on a supercomputer. With access to larger resources, it will be possible to measure speed-up, efficiency, and memory usage across hundreds or thousands of MPI ranks. This will provide a real evaluation of the parallel efficiency of the Union-Find based implementation and confirm its suitability for high-performance computing platforms.
