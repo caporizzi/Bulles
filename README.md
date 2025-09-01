@@ -48,8 +48,28 @@ Plus, I followed the choice of the studied algorithm and stayed in a 4-connectiv
 For simplicity purposes, the choice is to only divide my grid horizontally and to exclude vertical.
 Each MPI rank gets rows. In this case it means that we only care about the communication from the rank above and below.
 
+### Step-by-step code implementation
 
+Rank 0 starts by reading the whole file. This ensure a consistent copy.
+Then we broadcast the dimension to all the rank through MPI_Bcast.
+Then we decide which rank gets which row through buidl, count and rows.
+Then we send the rows to the rank through MPI_Scatterv.
+Now each rank has its own rows to work on and we can avoid conflicts.
+Now we apply a threshold to all the value, ensuring we only end up with 0 and 1 value.
 
+At this point, we can leverage the parallelisation.
+Each rank will execute on it's own rows.
+It perform a connected component labeling (CCL), this means provisional labels will be given. We prepare the max label per rank. 
+Now we perform the offset: each rank gets a base offset, then adds it to its labels.
+After the offset, no different rank will have the same label ID.
+Now we need to find the cross rank equivalence. 
+Through MPI sendrecv, each rank will send its bottom row, and each rank will receive the top row from rank-1.
+We record the equivalence. This give the interrank equivalence.
+We also perform a local Union-Find. This give the intrarank equivalence.
+We then gather all the equivalence pair to rank 0 through MPI_Gatherv.
+Now we create a globalMap which will be used for the global merge.
+Now we broadcast the new mapping and we remap.
+Gather full labeled image through MPI_Gatherv and write the output.
 
 
 ## Verification
