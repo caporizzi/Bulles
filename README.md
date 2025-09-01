@@ -39,7 +39,11 @@ Bubble identification can be formulated as a connected component labeling (CCL) 
 
 #### Equivalence 
 Then, based on Discrete Math, Math based functions are always fast so went with Union based algorithm which will solve the equivalence part. 
-Union-Find has nearly constant-time operations with path compression and union by rank, making it highly efficient for merging label sets both locally (intra-rank) and across process boundaries (inter-rank). This is more scalable and robust than recursive DFS/BFS approaches, which may require deep recursion or redundant traversals.
+Union-Find has nearly constant-time operations with path compression and union by rank, making it highly efficient for merging label sets both locally (intra-rank) and across process boundaries (inter-rank). 
+
+Union-Find was chosen instead of BFS or DFS because it scales better for large grids. BFS and DFS both rely on traversing neighbors repeatedly, which can create redundant work when bubbles are large or spread across multiple ranks. DFS also suffers from recursion depth issues when components get big.
+Union-Find avoids these issues because it works with a simple parent array.  
+In practice this means it is faster and more parallel friendly than BFS or DFS, especially when equivalences must be resolved across MPI ranks.
 
 #### Connectivity
 Connectivity was restricted to 4-neighbors (up, down, left, right) instead of 8-neighbors. This choice avoids diagonal merging of bubbles, which can artificially connect distinct structures and bias size distribution. Moreover, 4-connectivity reduces ambiguity and simplifies communication at process boundaries, making it more aligned with physical interpretations in gas–liquid multiphase flows.
@@ -124,7 +128,7 @@ Both outputs were as intended.
 
 This output is processed by a Python program designed to count the number of bubbles in my domain and to measure the size of the gas regions.
 
-Here is an example for the initial iteration. My visit display this, I added the label.
+Here is an example for the initial iteration. 
 ![enter image description here](https://i.imgur.com/z9mMI1O.png)
 
 Here, I choose to view it as a percentage of gasses versus liquidity.
@@ -136,8 +140,21 @@ As expected most of the bubble have risen to the surface.
 ![enter image description here](https://i.imgur.com/DSmegJD.png)
 
 ![enter image description here](https://i.imgur.com/e6Nv6nR.png)
-
 The domain is mostly liquid, with ~70% of cells as liquid and ~30% representing gas regions. 
+
+
+
+## Limitations and Future Work
+
+### Limitations 
+While the current implementation successfully identifies and tracks bubbles in a parallel framework, several limitations remain. First, the algorithm only employs horizontal partitioning, which simplifies communication but limits scalability for very large domains.
+As the grid size increases, the communication between MPI ranks also grows, particularly during the exchange of boundary rows and the global equivalence resolution. This may limit the efficiency gains from additional processes in large-scale simulations.
+### Future work
+
+One idea is to implement a fully parallel Union-Find with global synchronization, which would allow equivalence resolution to be done more efficiently without relying on a central process.
+
+These improvements would not only extend the algorithm’s functionality but also could help increase speed-up and improve scalability on high-performance computing systems. It should be noted that in the current work, the primary focus was on correctness and parallel implementation of the algorithm, rather than on optimizing performance or achieving maximum speed-up.
+
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
 
