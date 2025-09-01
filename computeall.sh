@@ -12,7 +12,7 @@ for file in *.vtk; do
     echo "Processing $file -> result/result_$num.dat ..."
     
     # Run MPI program with input and output arguments
-    mpirun -np 2 ./keep "$file" "result/result_$num.dat"
+    mpirun -np 2 ./track "$file" "result/result_$num.dat"
     
     count=$((count + 1))
 done
