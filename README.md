@@ -142,6 +142,9 @@ As expected most of the bubble have risen to the surface.
 ![enter image description here](https://i.imgur.com/e6Nv6nR.png)
 The domain is mostly liquid, with ~70% of cells as liquid and ~30% representing gas regions. 
 
+The main bottleneck will likely come from the global equivalence resolution step. This stage currently relies on gathering equivalence pairs on rank 0, which introduces a synchronization point and limits parallel efficiency as the number of processes increases. 	
+
+Since all the execution was done locally, performance metrics such as runtime scaling or memory consumption were excluded from the analysis. The main focus was on verifying correctness and ensuring that the algorithm works in a distributed-memory setting. However, the algorithm was designed with scalability in mind, and the next step is to run it on a supercomputer. With access to larger resources, it will be possible to measure speed-up, efficiency, and memory usage across hundreds or thousands of MPI ranks. This will provide a real evaluation of the parallel efficiency of the Union-Find based implementation and confirm its suitability for high-performance computing platforms.
 
 
 ## Limitations and Future Work
@@ -154,6 +157,17 @@ As the grid size increases, the communication between MPI ranks also grows, part
 One idea is to implement a fully parallel Union-Find with global synchronization, which would allow equivalence resolution to be done more efficiently without relying on a central process.
 
 These improvements would not only extend the algorithm’s functionality but also could help increase speed-up and improve scalability on high-performance computing systems. It should be noted that in the current work, the primary focus was on correctness and parallel implementation of the algorithm, rather than on optimizing performance or achieving maximum speed-up.
+
+### How to execute
+
+Convert your `.vtk` into `.dat` using `./conv`
+
+Execute the program `mpirun -np n ./track yourfile.dat yourresult.dat` where n is the number of process
+
+## Conclusion
+
+As expected, the bubbles move upward and merge together, which reduces the number of separate regions over time. 
+This matches the physical behavior of multiphase flows.
 
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
