@@ -12,7 +12,7 @@ By combining robust detection methods with parallel computing techniques, the go
 ### Understanding and Drawing
 
 To conceive the algorithm, the main source was "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" [1] where both the sequential and the parallel solution were given.
-Here, Figure 1 shows the sequential algorithm. The main idea is that it does a breath first search. Each time we find a node we look for the direct neighbor mark them then execute this on the neighbor. Once we can't find direct neighbors all the marked node are of the same id and we continue to iterate through the grid. 
+Here, this figure shows the sequential algorithm. The main idea is that it does a breath first search. Each time we find a node we look for the direct neighbor mark them then execute this on the neighbor. Once we can't find direct neighbors all the marked node are of the same id and we continue to iterate through the grid. 
 
 ![Figure 1 - Basic serial single block identification algorithm](https://i.imgur.com/dALZYxE.png) 
 
@@ -20,7 +20,7 @@ Here is a visual representation of the sequential algorithm labeling a node and 
 
 ![enter image description here](https://i.imgur.com/VcUjxCI.png)
 
-Here, Figure 2 shows the parallel algorithm. 
+Here, this figure shows the parallel algorithm. 
 Here the main idea is that the grid is divided in blocks. Each block is explored giving indexes to each node. Once all nodes are tagged we compare if node of different block are neighbors and update the node id.
 
 ![Figure 2 - Parallel, multi-block tag synchronization algorithm](https://i.imgur.com/8W6BvQj.png)
@@ -172,10 +172,5 @@ This matches the physical behavior of multiphase flows.
 
 ## References 
 [1] "A parallel Eulerian interface tracking/Lagrangian point particle multi-scale coupling procedure" M. Herrmann, 2009 
-
-## Figures
-Figure 1 - Basic serial single block identification algorithm
-
-Figure 2 - Parallel, multi-block tag synchronization algorithm
 
 
