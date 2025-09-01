@@ -34,6 +34,22 @@ Here is a visual representation of the parallel algorithm. It checks if neighbor
 
 ## Implementation
 
+Here I discuss my algorithm choice
+
+### Why this algorithm
+
+The goal is to create something parallel friendly and simple based on the time given. 
+The first choice is to implement a connected component labelling to create label. As given in the algorithm.
+Then, based on Discrete Math, Math based functions are always fast so went with Union based algorithm which will solve the equivalence part. 
+Plus, I followed the choice of the studied algorithm and stayed in a 4-connectivity to avoid diagonals connectivity.
+
+### About data parallelism
+
+For simplicity purposes, the choice is to only divide my grid horizontally and to exclude vertical.
+Each MPI rank gets rows. In this case it means that we only care about the communication from the rank above and below.
+
+
+
 
 
 ## Verification
@@ -79,7 +95,7 @@ The offset and the pair are what is intended after the global merge, we reach th
 
 Here I ask a LLM to give me some testcase.
 
-It outputs a test case which ressembles a snake, testing if the corner, rank comuncation and gathering works as intended.
+It outputs a test case which ressembles a snake, testing if the corner, rank communication and gathering works as intended.
 It outputs a test case which looks like little boxe.
 Both outputs were as intended.
 
