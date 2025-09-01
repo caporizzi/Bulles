@@ -140,6 +140,7 @@ As expected most of the bubble have risen to the surface.
 ![enter image description here](https://i.imgur.com/DSmegJD.png)
 
 ![enter image description here](https://i.imgur.com/e6Nv6nR.png)
+
 The domain is mostly liquid, with ~70% of cells as liquid and ~30% representing gas regions. 
 
 The main bottleneck will likely come from the global equivalence resolution step. This stage currently relies on gathering equivalence pairs on rank 0, which introduces a synchronization point and limits parallel efficiency as the number of processes increases. 	
